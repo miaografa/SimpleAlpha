@@ -1,0 +1,17 @@
+,funcName,factorName
+0,slope,SLOPE_1
+1,ema,EMA_10
+2,stdev,STDEV_30
+3,atr,ATRr_14
+4,true_range,TRUERANGE_1
+5,pgo,PGO_14
+6,apo,APO_12_26
+7,pvo,PVO_12_26_9
+8,pvo,PVOh_12_26_9
+9,pvo,PVOs_12_26_9
+10,trix,TRIX_30_9
+11,pdist,PDIST
+12,squeeze,SQZ_ON
+13,thermo,THERMO_20_2_0.5
+14,thermo,THERMOma_20_2_0.5
+15,thermo,THERMOs_20_2_0.5
