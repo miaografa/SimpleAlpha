@@ -12,14 +12,22 @@ class DataLoader(object):
     '''
 
     def __init__(self):
-        self.years = ['2020', '2021', '2022', '2023']
-        self.months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
         self.df_dict = {}
-        for year in self.years:
-            self.df_dict[year] = {}
-            for month in self.months:
-                self.df_dict[year][month] = []  # 存放每个月份的数据
         self.result_recorder = ResultRecorder()
+        self.bond_list = ['110052', '110053', '110058', '111006', '111013', '111016',
+       '113011', '113016', '113025', '113027', '113044', '113057',
+       '113537', '113585', '113588', '113595', '113597', '113626',
+       '113672', '113676', '118021', '118035', '118037', '123012',
+       '123013', '123015', '123018', '123025', '123031', '123034',
+       '123046', '123077', '123083', '123098', '123105', '123116',
+       '123118', '123134', '123136', '123148', '123173', '123176',
+       '123177', '123181', '123187', '123191', '123194', '123197',
+       '123200', '123201', '123205', '123206', '123207', '123209',
+       '123218', '123220', '127014', '127021', '127029', '127057',
+       '127058', '127065', '127079', '127080', '127089', '127090',
+       '127091', '128025', '128040', '128041', '128044', '128070',
+       '128074', '128075', '128078', '128079', '128082', '128095',
+       '128101', '128111', '128114', '128145']   
         return
 
     def read_file(self, temp_path):
@@ -27,10 +35,8 @@ class DataLoader(object):
         读取单个数据文档/
         '''
         # 从本地读取价量数据
-        binance_price_df = pd.read_csv(temp_path)
-        binance_price_df.columns = ['open_time', 'open', 'high', 'low', 'close', 'volume', 'close_time', 'quote_volume',
-                                    'count', 'taker_buy_volume', 'taker_buy_quote_volume', 'ignore']
-        return binance_price_df
+        price_df = pd.read_csv(temp_path)
+        return price_df
 
     def init_month_df(self, root_path):
         '''
@@ -45,62 +51,14 @@ class DataLoader(object):
             # 检查是否是文件夹
             if not 'zip' in filename and not 'csv' in filename:
                 if os.path.isdir(file_path):
-                    self.init_month_df(file_path)
+                    if filename == '2022_raw':
+                        self.init_month_df(file_path)
             else:
-                year, month = get_time_from_filename(filename)
-                temp_df = self.read_file(file_path)
-                if len(temp_df) > 400:
-                    if year in self.years and month in self.months:
-                        self.df_dict[year][month].append(temp_df)
+                if filename[:6] in self.bond_list:  # 在需要的范围内才考虑
+                    temp_df = self.read_file(file_path)
+                    if len(temp_df) > 400:
+                        self.df_dict[filename] = temp_df
         return
-
-    def get_valid_year_month(self)->list:
-        '''
-        输出有数据保存的年月列表
-        '''
-        output_list = []
-        for year in self.years:
-            for month in self.months:
-                if len(self.get_month_df(year, month)) > 0:
-                    output_list.append((year, month))
-        return output_list
-
-    def convert_year_month(self, year, month):
-        '''
-        将年月转换为字符串
-        '''
-        if type(year) != str:
-            year = str(year)
-        if type(month) != str:
-            month = str(month)
-        if len(month) == 1:
-            month = '0' + month
-        return year, month
-
-    def get_month_df(self, year, month) -> list:
-        '''
-        获取某个月份的所有特征文件
-        '''
-        year, month = self.convert_year_month(year, month)
-        return self.df_dict[year][month]
-
-    def set_month_df(self, year, month, df_list:list):
-        '''
-            设置某个月份的所有特征文件
-        '''
-        year, month = self.convert_year_month(year, month)
-        self.df_dict[year][month] = df_list
-        return
-
-    def get_all_df(self) -> list:
-        '''
-        获取所有特征文件
-        '''
-        all_df = []
-        for year in self.years:
-            for month in self.months:
-                all_df += self.df_dict[year][month]
-        return all_df
 
     def set_record_df(self, kind:str, factor_name:str, result_df:pd.DataFrame):
         '''
@@ -165,11 +123,6 @@ class ResultRecorder(object):
         return info_df
 
 
-def get_time_from_filename(filename):
-    year = filename[-11:-7]
-    month = filename[-6:-4]
-    return year, month
-
 
 # def log_return(series):
 #     return np.log(series).diff()
@@ -207,11 +160,8 @@ def compute_future_rtn_for_all(dl:DataLoader, periods=(5, 10, 20, 50)):
     '''
     计算Data_Loader中所有数据的未来rtn
     '''
-    for year in dl.years:
-        for month in dl.months:
-            data_df_list = dl.get_month_df(year, month)
-            data_df_list = compute_future_rtn(data_df_list, periods)
-            dl.set_month_df(year, month, data_df_list)
+    data_df_list = list(dl.df_dict.values())
+    compute_future_rtn(data_df_list, periods)
     return
 
 

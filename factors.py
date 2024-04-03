@@ -33,20 +33,24 @@ def handle_dataloader_data(factor_func:callable):
     return add_factors_for_dl
 
 
-def handle_list_data(df_list, factor_func:callable, **kwargs):
+def handle_list_data(factor_func:callable, **kwargs):
     '''
     一般用不到
-    按照公式加入特征，对象是df构成的list。
+    按照公式加入特征，dl是df_dict构成的list。
     :param df_list:  list of DataFrame
     :param factor_func: 因子的计算函数，输入DataFrame，输出计算好factor的DataFrame
     :return:
     '''
-    if type(df_list) != list:
-        df_list = [df_list]
-    result_list = []
-    for df in df_list:
-        result_list.append(factor_func(df, **kwargs))
-    return result_list
+    def add_factors_for_dl(dl, *args, **kwargs):
+        result_list = []
+        for name, df in dl.df_dict.items():
+            try:
+                result_list.append(factor_func(df, *args, **kwargs))
+            except Exception as e:
+                print("Exception:",e)
+                print(f'Error: name: {name}')
+        return
+    return add_factors_for_dl
 
 
 @handle_dataloader_data

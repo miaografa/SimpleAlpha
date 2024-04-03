@@ -5,7 +5,7 @@ from itertools import product
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import TimeSeriesSplit
-from sklearn.metrics import f1_score, auc
+from sklearn.metrics import f1_score, roc_auc_score
 import matplotlib.pyplot as plt
 from tqdm import tqdm, trange
 from data_utils import DataLoader
@@ -76,7 +76,7 @@ class FastMLFactorEvaluator:
             temp_df_list = dataloader.get_month_df(year, month)
             df_list += temp_df_list  # 合并为一个更长的list，每一个元素都是一个df
         data_df = pd.concat(df_list, axis=0)
-        data_df = data_df[np.abs(data_df['close_Z']) > 1.4]  # 默认的cut
+        data_df = data_df # [np.abs(data_df['close_Z']) > 1.4]  # 默认的cut
         data_df.dropna(inplace=True)
         data_df = data_df.reset_index(drop=True)
         return data_df
@@ -93,9 +93,10 @@ class FastMLFactorEvaluator:
         auc_score = auc(y_test, Y_pred)
         return f1, auc_score
 
-    def get_assess_df(self, metric='f1'):
+    def get_assess_df(self, metric='auc'):
         '''
         获取评估结果的df，没想好怎么写更方便，暂时先能够按照f1，auc的格式输出
+        metric='auc', 'f1'
         :return:
         '''
         assess_df = pd.DataFrame()
@@ -200,7 +201,7 @@ class MLFactorEvaluator:
         model.fit(x_train, y_train)
         Y_pred = model.predict(x_test)
         f1 = f1_score(y_test, Y_pred)
-        auc_score = auc(y_test, Y_pred)
+        auc_score = roc_auc_score(y_test, Y_pred)
         return f1, auc_score
 
     def get_assess_df(self, metric='f1'):
